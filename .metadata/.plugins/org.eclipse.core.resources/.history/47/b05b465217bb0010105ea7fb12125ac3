@@ -1,0 +1,68 @@
+package vista;
+
+import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.table.*;
+import java.awt.*;
+import java.util.regex.Pattern;
+
+public abstract class BaseCrudPanel extends JPanel {
+    protected final JTextField txtBuscar = new JTextField(28);
+    protected final JButton btnRefrescar = new JButton("Refrescar");
+    protected final JButton btnNuevo     = new JButton("Nuevo");
+    protected final JTable tabla         = new JTable();
+    protected final DefaultTableModel modelo;
+
+    protected BaseCrudPanel(String[] columnas) {
+        setLayout(new BorderLayout());
+        // barra superior
+        var izq = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        izq.add(new JLabel("Buscar:")); izq.add(txtBuscar);
+        var der = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        der.add(btnRefrescar); der.add(btnNuevo);
+        var top = new JPanel(new BorderLayout(10,10));
+        top.add(izq, BorderLayout.WEST); top.add(der, BorderLayout.EAST);
+        top.setBorder(BorderFactory.createEmptyBorder(8,12,8,12));
+        add(top, BorderLayout.NORTH);
+
+        // tabla
+        modelo = new DefaultTableModel(columnas, 0) {
+            @Override public boolean isCellEditable(int r, int c) { return isAccionesColumn(c); }
+            @Override public Class<?> getColumnClass(int c) { return columnClass(c); }
+        };
+        tabla.setModel(modelo);
+        tabla.setRowHeight(30);
+        var sorter = new TableRowSorter<>(modelo);
+        tabla.setRowSorter(sorter);
+        txtBuscar.getDocument().addDocumentListener(new DocumentListener() {
+            private void filtrar() {
+                String q = txtBuscar.getText().trim();
+                sorter.setRowFilter(q.isEmpty() ? null : RowFilter.regexFilter("(?i)"+ Pattern.quote(q)));
+            }
+            public void insertUpdate(DocumentEvent e){ filtrar(); }
+            public void removeUpdate(DocumentEvent e){ filtrar(); }
+            public void changedUpdate(DocumentEvent e){ filtrar(); }
+        });
+        var sp = new JScrollPane(tabla);
+        sp.setBorder(BorderFactory.createEmptyBorder(0,12,12,12));
+        add(sp, BorderLayout.CENTER);
+
+        btnRefrescar.addActionListener(e -> cargar());
+        btnNuevo.addActionListener(e -> nuevo());
+    }
+
+    protected int idFromViewRow(int viewRow){
+        if (viewRow<0) return -1;
+        int modelRow = tabla.convertRowIndexToModel(viewRow);
+        Object v = modelo.getValueAt(modelRow, 0);
+        return (v instanceof Number)? ((Number)v).intValue() : -1;
+    }
+
+    // puntos de extensión
+    protected boolean isAccionesColumn(int c){ return false; }
+    protected Class<?> columnClass(int c){ return String.class; }
+    protected abstract void configurarColumnas();
+    protected abstract void cargar();
+    protected abstract void nuevo();
+}

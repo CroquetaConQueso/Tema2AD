@@ -1,0 +1,224 @@
+package vista;
+
+import dao.ClientesDAO;
+
+import javax.swing.*;
+import javax.swing.table.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.List;
+
+public class FrmInicio extends JFrame {
+
+    private final JTextField txtBuscar = new JTextField();
+    private final JButton btnNuevo = new JButton("Nuevo cliente");
+    private final JButton btnRefrescar = new JButton("Refrescar");
+    private final JTable tabla = new JTable();
+    private final DefaultTableModel modelo = new DefaultTableModel(
+            new Object[]{"ID", "Nombre", "Email", "Edad", "Acciones", ""}, 0) {
+        @Override public boolean isCellEditable(int r, int c) { return c >= 4; }
+        @Override public Class<?> getColumnClass(int c) {
+            return switch (c) {
+                case 0, 3 -> Integer.class;
+                default -> String.class;
+            };
+        }
+    };
+    private TableRowSorter<TableModel> sorter;
+
+    public FrmInicio() {
+        setTitle("Gestor de Clientes — One Page");
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setSize(880, 520);
+        setLocationRelativeTo(null);
+
+        // —— Cabecera
+        JLabel titulo = new JLabel("Clientes (empresa_clientes)", SwingConstants.LEFT);
+        titulo.setFont(titulo.getFont().deriveFont(Font.BOLD, 18f));
+
+        JPanel header = new JPanel(new BorderLayout(10, 10));
+        header.setBorder(BorderFactory.createEmptyBorder(10, 12, 0, 12));
+        header.add(titulo, BorderLayout.WEST);
+
+        // —— Barra de acciones
+        JPanel barra = new JPanel(new BorderLayout(10, 10));
+        JPanel izquierda = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        txtBuscar.setColumns(24);
+        izquierda.add(new JLabel("Buscar:"));
+        izquierda.add(txtBuscar);
+
+        JPanel derecha = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        derecha.add(btnRefrescar);
+        derecha.add(btnNuevo);
+
+        barra.add(izquierda, BorderLayout.WEST);
+        barra.add(derecha, BorderLayout.EAST);
+        barra.setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
+
+        // —— Tabla
+        tabla.setModel(modelo);
+        tabla.setRowHeight(28);
+        tabla.setFillsViewportHeight(true);
+        tabla.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        tabla.setAutoCreateRowSorter(true);
+
+        sorter = new TableRowSorter<>(tabla.getModel());
+        tabla.setRowSorter(sorter);
+
+        // Columnas y renderers
+        configurarColumnas();
+
+        JScrollPane scroll = new JScrollPane(tabla);
+        scroll.setBorder(BorderFactory.createEmptyBorder(0, 12, 12, 12));
+
+        // —— Layout principal
+        JPanel root = new JPanel(new BorderLayout());
+        root.add(header, BorderLayout.NORTH);
+        root.add(barra, BorderLayout.CENTER);
+        root.add(scroll, BorderLayout.SOUTH);
+        setContentPane(root);
+
+        // —— Eventos
+        txtBuscar.getDocument().addDocumentListener(new DocumentListener() {
+            private void filtrar() {
+                String q = txtBuscar.getText().trim();
+                if (q.isEmpty()) sorter.setRowFilter(null);
+                else sorter.setRowFilter(RowFilter.regexFilter("(?i)" + Pattern.quote(q)));
+            }
+            @Override public void insertUpdate(javax.swing.event.DocumentEvent e) { filtrar(); }
+            @Override public void removeUpdate(javax.swing.event.DocumentEvent e) { filtrar(); }
+            @Override public void changedUpdate(javax.swing.event.DocumentEvent e) { filtrar(); }
+        });
+
+        btnRefrescar.addActionListener(e -> cargarDatos());
+        btnNuevo.addActionListener(e -> abrirAlta());
+
+        // —— Carga inicial
+        cargarDatos();
+    }
+
+    private void configurarColumnas() {
+        TableColumnModel cols = tabla.getColumnModel();
+
+        // Ajustes de ancho
+        cols.getColumn(0).setPreferredWidth(60);   // ID
+        cols.getColumn(1).setPreferredWidth(220);  // Nombre
+        cols.getColumn(2).setPreferredWidth(260);  // Email
+        cols.getColumn(3).setPreferredWidth(60);   // Edad
+        cols.getColumn(4).setPreferredWidth(100);  // Editar
+        cols.getColumn(5).setPreferredWidth(100);  // Borrar
+
+        // Render/Editor para acciones
+        cols.getColumn(4).setCellRenderer(new BotonRenderer("Editar"));
+        cols.getColumn(4).setCellEditor(new BotonEditor("Editar", this::editarFilaSeleccionada));
+
+        cols.getColumn(5).setCellRenderer(new BotonRenderer("Borrar"));
+        cols.getColumn(5).setCellEditor(new BotonEditor("Borrar", this::borrarFilaSeleccionada));
+    }
+
+    private void cargarDatos() {
+        try {
+            List<Object[]> filas = new ClientesDAO().listarTodos();
+            modelo.setRowCount(0);
+            for (Object[] f : filas) {
+                // Añadimos placeholders para las columnas de acciones
+                modelo.addRow(new Object[]{f[0], f[1], f[2], f[3], "Editar", "Borrar"});
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error al listar: " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private Integer idDeFila(int viewRow) {
+        if (viewRow < 0) return null;
+        int modelRow = tabla.convertRowIndexToModel(viewRow);
+        return (Integer) modelo.getValueAt(modelRow, 0);
+    }
+
+    private void editarFilaSeleccionada(int viewRow) {
+        Integer id = idDeFila(viewRow);
+        if (id == null) return;
+        // TODO: abre tu formulario de edición/alta y pásale el ID
+        // new FrmClienteForm(this, id).setVisible(true);
+        JOptionPane.showMessageDialog(this, "Editar ID = " + id +
+                " (conecta aquí tu diálogo de edición)");
+        cargarDatos();
+    }
+
+    private void borrarFilaSeleccionada(int viewRow) {
+        Integer id = idDeFila(viewRow);
+        if (id == null) return;
+
+        int r = JOptionPane.showConfirmDialog(this,
+                "¿Borrar el cliente ID " + id + "?", "Confirmar borrado",
+                JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+        if (r != JOptionPane.YES_OPTION) return;
+
+        try {
+            int n = new ClientesDAO().borrar(id);
+            if (n > 0) cargarDatos();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "No se pudo borrar: " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void abrirAlta() {
+        // TODO: abre tu formulario de alta (sin ID)
+        // new FrmClienteForm(this, null).setVisible(true);
+        JOptionPane.showMessageDialog(this, "Alta de cliente (conecta tu diálogo de alta)");
+        cargarDatos();
+    }
+
+    // —— Render/Editor de botones para la tabla
+    private static class BotonRenderer extends JButton implements TableCellRenderer {
+        public BotonRenderer(String texto) { setText(texto); setOpaque(true); }
+        @Override public Component getTableCellRendererComponent(JTable table, Object value,
+                                                                 boolean isSelected, boolean hasFocus,
+                                                                 int row, int column) {
+            setText(value==null? "" : value.toString());
+            return this;
+        }
+    }
+
+    private static class BotonEditor extends AbstractCellEditor implements TableCellEditor, ActionListener {
+        private final JButton button = new JButton();
+        private final java.util.function.IntConsumer onClick; // recibe row vista
+        private JTable table;
+
+        public BotonEditor(String texto, java.util.function.IntConsumer onClick) {
+            this.onClick = onClick;
+            button.setText(texto);
+            button.addActionListener(this);
+        }
+
+        @Override public Component getTableCellEditorComponent(JTable table, Object value,
+                                                               boolean isSelected, int row, int column) {
+            this.table = table;
+            button.setText(value==null? "" : value.toString());
+            return button;
+        }
+
+        @Override public Object getCellEditorValue() { return button.getText(); }
+
+        @Override public void actionPerformed(ActionEvent e) {
+            int viewRow = table.getEditingRow();
+            fireEditingStopped();
+            onClick.accept(viewRow);
+        }
+    }
+
+    // —— main de prueba
+    public static void main(String[] args) {
+        // Nimbus opcional
+        try {
+            for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) UIManager.setLookAndFeel(info.getClassName());
+            }
+        } catch (Exception ignored) {}
+        SwingUtilities.invokeLater(() -> new FrmInicio().setVisible(true));
+    }
+}

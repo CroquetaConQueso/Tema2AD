@@ -1,0 +1,324 @@
+// src/vista/FrmInicio.java
+package vista;
+
+import dao.ClientesDAO;
+import dao.DireccionesDAO;
+import dao.ContactosDAO;
+
+import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.table.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.util.List;
+import java.util.function.IntConsumer;
+import java.util.regex.Pattern;
+
+public class FrmInicio extends JFrame {
+
+    public FrmInicio() {
+        setTitle("Gestor — One Page (empresa_clientes)");
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+
+        // ——— UX: tamaño inicial decente y responsivo
+        Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+        int w = (int) (screen.width * 0.90);
+        int h = (int) (screen.height * 0.85);
+        setSize(Math.max(w, 1000), Math.max(h, 600));
+        setMinimumSize(new Dimension(1000, 600));
+        setLocationRelativeTo(null);
+        setExtendedState(getExtendedState() | JFrame.MAXIMIZED_BOTH); // abre maximizado si se puede
+
+        // ——— Título global
+        JLabel titulo = new JLabel("Empresa · Base de datos: empresa_clientes", SwingConstants.LEFT);
+        titulo.setFont(titulo.getFont().deriveFont(Font.BOLD, 18f));
+        JPanel header = new JPanel(new BorderLayout());
+        header.setBorder(BorderFactory.createEmptyBorder(10, 12, 4, 12));
+        header.add(titulo, BorderLayout.WEST);
+
+        // ——— Tabs
+        JTabbedPane tabs = new JTabbedPane();
+        tabs.addTab("Clientes", new TabClientes());
+        tabs.addTab("Direcciones", new TabDirecciones());
+        tabs.addTab("Contactos", new TabContactos());
+
+        setLayout(new BorderLayout());
+        add(header, BorderLayout.NORTH);
+        add(tabs, BorderLayout.CENTER);
+    }
+
+    /* ===================== T A B   B A S E ===================== */
+    abstract class CrudTab extends JPanel {
+        protected final JTextField txtBuscar = new JTextField(28);
+        protected final JButton btnRefrescar = new JButton("Refrescar");
+        protected final JButton btnNuevo = new JButton("Nuevo");
+        protected final JTable tabla = new JTable();
+        protected final DefaultTableModel modelo;
+
+        CrudTab(String titulo, String[] columnas) {
+            setLayout(new BorderLayout(0, 0));
+            // barra
+            JPanel barra = new JPanel(new BorderLayout(10, 10));
+            JPanel izq = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+            izq.add(new JLabel("Buscar:"));
+            izq.add(txtBuscar);
+            JPanel der = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+            der.add(btnRefrescar);
+            der.add(btnNuevo);
+            barra.add(izq, BorderLayout.WEST);
+            barra.add(der, BorderLayout.EAST);
+            barra.setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
+            add(barra, BorderLayout.NORTH);
+
+            // tabla
+            modelo = new DefaultTableModel(columnas, 0) {
+                @Override public boolean isCellEditable(int r, int c) { return isAccionesColumn(c); }
+                @Override public Class<?> getColumnClass(int col) { return guessColumnClass(col); }
+            };
+            tabla.setModel(modelo);
+            tabla.setRowHeight(30);
+            tabla.setAutoResizeMode(JTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
+            tabla.setFillsViewportHeight(true);
+            tabla.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+            TableRowSorter<TableModel> sorter = new TableRowSorter<>(modelo);
+            tabla.setRowSorter(sorter);
+            txtBuscar.getDocument().addDocumentListener(new DocumentListener() {
+                void filtrar() {
+                    String q = txtBuscar.getText().trim();
+                    sorter.setRowFilter(q.isEmpty() ? null : RowFilter.regexFilter("(?i)" + Pattern.quote(q)));
+                }
+                @Override public void insertUpdate(DocumentEvent e) { filtrar(); }
+                @Override public void removeUpdate(DocumentEvent e) { filtrar(); }
+                @Override public void changedUpdate(DocumentEvent e) { filtrar(); }
+            });
+
+            JScrollPane sp = new JScrollPane(tabla);
+            sp.setBorder(BorderFactory.createEmptyBorder(0, 12, 12, 12));
+            add(sp, BorderLayout.CENTER);
+
+            btnRefrescar.addActionListener(e -> cargar());
+            btnNuevo.addActionListener(e -> nuevo());
+        }
+
+        // helpers
+        protected int viewRowToId(int viewRow) {
+            if (viewRow < 0) return -1;
+            int modelRow = tabla.convertRowIndexToModel(viewRow);
+            Object v = modelo.getValueAt(modelRow, 0);
+            return (v instanceof Number) ? ((Number) v).intValue() : -1;
+        }
+        protected boolean isAccionesColumn(int c) { return false; }         // override
+        protected Class<?> guessColumnClass(int col) { return String.class; } // override
+        protected abstract void configurarColumnas(); // set renderers/editors/widths
+        protected abstract void cargar();
+        protected abstract void nuevo();
+        protected abstract void editar(int idFila);
+        protected abstract void borrar(int idFila);
+    }
+
+    /* ======================= C L I E N T E S ======================= */
+    class TabClientes extends CrudTab {
+        public TabClientes() {
+            super("Clientes", new String[]{"ID", "Nombre", "Email", "Edad", "Editar", "Borrar"});
+            configurarColumnas();
+            cargar();
+        }
+        @Override protected boolean isAccionesColumn(int c) { return c >= 4; }
+        @Override protected Class<?> guessColumnClass(int col) {
+            return (col == 0 || col == 3) ? Integer.class : String.class;
+        }
+        @Override protected void configurarColumnas() {
+            TableColumnModel cols = tabla.getColumnModel();
+            cols.getColumn(0).setPreferredWidth(60);
+            cols.getColumn(1).setPreferredWidth(260);
+            cols.getColumn(2).setPreferredWidth(320);
+            cols.getColumn(3).setPreferredWidth(60);
+            cols.getColumn(4).setPreferredWidth(90);
+            cols.getColumn(5).setPreferredWidth(90);
+
+            cols.getColumn(4).setCellRenderer(new BtnRenderer("Editar"));
+            cols.getColumn(4).setCellEditor(new BtnEditor("Editar", (row) -> editar(viewRowToId(row))));
+            cols.getColumn(5).setCellRenderer(new BtnRenderer("Borrar"));
+            cols.getColumn(5).setCellEditor(new BtnEditor("Borrar", (row) -> borrar(viewRowToId(row))));
+        }
+        @Override protected void cargar() {
+            try {
+                List<Object[]> filas = new ClientesDAO().listarTodos();
+                modelo.setRowCount(0);
+                for (Object[] f : filas) modelo.addRow(new Object[]{f[0], f[1], f[2], f[3], "Editar", "Borrar"});
+            } catch (Exception ex) { showError("clientes", ex); }
+        }
+        @Override protected void nuevo() {
+            // TODO: abrir diálogo de alta (nombre/email/edad) → insertar → cargar()
+            JOptionPane.showMessageDialog(this, "Nuevo cliente (conectar diálogo)", "Info", JOptionPane.INFORMATION_MESSAGE);
+            cargar();
+        }
+        @Override protected void editar(int id) {
+            if (id < 0) return;
+            // TODO: abrir diálogo edición con ID → modificar → cargar()
+            JOptionPane.showMessageDialog(this, "Editar cliente ID " + id + " (conectar diálogo)", "Editar", JOptionPane.INFORMATION_MESSAGE);
+            cargar();
+        }
+        @Override protected void borrar(int id) {
+            if (id < 0) return;
+            if (confirm("¿Borrar cliente ID " + id + "?")) {
+                try {
+                    int n = new ClientesDAO().borrar(id);
+                    if (n > 0) cargar();
+                } catch (Exception ex) { showError("borrar cliente", ex); }
+            }
+        }
+    }
+
+    /* ===================== D I R E C C I O N E S ==================== */
+    class TabDirecciones extends CrudTab {
+        public TabDirecciones() {
+            super("Direcciones", new String[]{"ID", "ClienteID", "Vía", "Ciudad", "CP", "Editar", "Borrar"});
+            configurarColumnas();
+            cargar();
+        }
+        @Override protected boolean isAccionesColumn(int c) { return c >= 5; }
+        @Override protected Class<?> guessColumnClass(int col) {
+            return (col == 0 || col == 1) ? Integer.class : String.class;
+        }
+        @Override protected void configurarColumnas() {
+            TableColumnModel cols = tabla.getColumnModel();
+            cols.getColumn(0).setPreferredWidth(70);
+            cols.getColumn(1).setPreferredWidth(90);
+            cols.getColumn(2).setPreferredWidth(260);
+            cols.getColumn(3).setPreferredWidth(200);
+            cols.getColumn(4).setPreferredWidth(80);
+            cols.getColumn(5).setPreferredWidth(90);
+            cols.getColumn(6).setPreferredWidth(90);
+
+            cols.getColumn(5).setCellRenderer(new BtnRenderer("Editar"));
+            cols.getColumn(5).setCellEditor(new BtnEditor("Editar", (row) -> editar(viewRowToId(row))));
+            cols.getColumn(6).setCellRenderer(new BtnRenderer("Borrar"));
+            cols.getColumn(6).setCellEditor(new BtnEditor("Borrar", (row) -> borrar(viewRowToId(row))));
+        }
+        @Override protected void cargar() {
+            try {
+                List<Object[]> filas = new DireccionesDAO().listarTodos();
+                modelo.setRowCount(0);
+                for (Object[] f : filas) modelo.addRow(new Object[]{f[0], f[1], f[2], f[3], f[4], "Editar", "Borrar"});
+            } catch (Exception ex) { showError("direcciones", ex); }
+        }
+        @Override protected void nuevo() {
+            JOptionPane.showMessageDialog(this, "Nueva dirección (conectar diálogo)", "Info", JOptionPane.INFORMATION_MESSAGE);
+            cargar();
+        }
+        @Override protected void editar(int id) {
+            if (id < 0) return;
+            JOptionPane.showMessageDialog(this, "Editar dirección ID " + id + " (conectar diálogo)", "Editar", JOptionPane.INFORMATION_MESSAGE);
+            cargar();
+        }
+        @Override protected void borrar(int id) {
+            if (id < 0) return;
+            if (confirm("¿Borrar dirección ID " + id + "?")) {
+                try {
+                    int n = new DireccionesDAO().borrar(id);
+                    if (n > 0) cargar();
+                } catch (Exception ex) { showError("borrar dirección", ex); }
+            }
+        }
+    }
+
+    /* ====================== C O N T A C T O S ====================== */
+    class TabContactos extends CrudTab {
+        public TabContactos() {
+            super("Contactos", new String[]{"ID", "ClienteID", "Tipo", "Valor", "Editar", "Borrar"});
+            configurarColumnas();
+            cargar();
+        }
+        @Override protected boolean isAccionesColumn(int c) { return c >= 4; }
+        @Override protected Class<?> guessColumnClass(int col) {
+            return (col == 0 || col == 1) ? Integer.class : String.class;
+        }
+        @Override protected void configurarColumnas() {
+            TableColumnModel cols = tabla.getColumnModel();
+            cols.getColumn(0).setPreferredWidth(70);
+            cols.getColumn(1).setPreferredWidth(90);
+            cols.getColumn(2).setPreferredWidth(120);
+            cols.getColumn(3).setPreferredWidth(340);
+            cols.getColumn(4).setPreferredWidth(90);
+            cols.getColumn(5).setPreferredWidth(90);
+
+            cols.getColumn(4).setCellRenderer(new BtnRenderer("Editar"));
+            cols.getColumn(4).setCellEditor(new BtnEditor("Editar", (row) -> editar(viewRowToId(row))));
+            cols.getColumn(5).setCellRenderer(new BtnRenderer("Borrar"));
+            cols.getColumn(5).setCellEditor(new BtnEditor("Borrar", (row) -> borrar(viewRowToId(row))));
+        }
+        @Override protected void cargar() {
+            try {
+                List<Object[]> filas = new ContactosDAO().listarTodos();
+                modelo.setRowCount(0);
+                for (Object[] f : filas) modelo.addRow(new Object[]{f[0], f[1], f[2], f[3], "Editar", "Borrar"});
+            } catch (Exception ex) { showError("contactos", ex); }
+        }
+        @Override protected void nuevo() {
+            JOptionPane.showMessageDialog(this, "Nuevo contacto (conectar diálogo)", "Info", JOptionPane.INFORMATION_MESSAGE);
+            cargar();
+        }
+        @Override protected void editar(int id) {
+            if (id < 0) return;
+            JOptionPane.showMessageDialog(this, "Editar contacto ID " + id + " (conectar diálogo)", "Editar", JOptionPane.INFORMATION_MESSAGE);
+            cargar();
+        }
+        @Override protected void borrar(int id) {
+            if (id < 0) return;
+            if (confirm("¿Borrar contacto ID " + id + "?")) {
+                try {
+                    int n = new ContactosDAO().borrar(id);
+                    if (n > 0) cargar();
+                } catch (Exception ex) { showError("borrar contacto", ex); }
+            }
+        }
+    }
+
+    /* =================== R E N D E R / E D I T O R ================== */
+    static class BtnRenderer extends JButton implements TableCellRenderer {
+        public BtnRenderer(String text) { setText(text); setFocusable(false); }
+        @Override public Component getTableCellRendererComponent(JTable t, Object v, boolean isSel, boolean hasF, int r, int c) {
+            setText(v == null ? "" : v.toString()); return this;
+        }
+    }
+    static class BtnEditor extends AbstractCellEditor implements TableCellEditor {
+        private final JButton btn = new JButton();
+        private JTable table;
+        private final IntConsumer onClick;
+        public BtnEditor(String text, IntConsumer onClick) {
+            this.onClick = onClick;
+            btn.setText(text);
+            btn.addActionListener(this::handle);
+        }
+        private void handle(ActionEvent e) {
+            int row = table.getEditingRow();
+            fireEditingStopped();
+            onClick.accept(row);
+        }
+        @Override public Component getTableCellEditorComponent(JTable t, Object v, boolean isSel, int r, int c) {
+            this.table = t; btn.setText(v == null ? "" : v.toString()); return btn;
+        }
+        @Override public Object getCellEditorValue() { return btn.getText(); }
+    }
+
+    /* ========================== U T I L E S ========================= */
+    private static boolean confirm(String msg) {
+        return JOptionPane.showConfirmDialog(null, msg, "Confirmar", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
+    }
+    private static void showError(String donde, Exception ex) {
+        ex.printStackTrace();
+        JOptionPane.showMessageDialog(null, "Error en " + donde + ": " + ex.getMessage(),
+                "Error", JOptionPane.ERROR_MESSAGE);
+    }
+
+    /* ============================ main ============================= */
+    public static void main(String[] args) {
+        try { for (UIManager.LookAndFeelInfo i : UIManager.getInstalledLookAndFeels())
+            if ("Nimbus".equals(i.getName())) UIManager.setLookAndFeel(i.getClassName()); } catch (Exception ignored) {}
+        SwingUtilities.invokeLater(() -> new FrmInicio().setVisible(true));
+    }
+}
+

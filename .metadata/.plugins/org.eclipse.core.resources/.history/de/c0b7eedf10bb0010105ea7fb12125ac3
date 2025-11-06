@@ -1,0 +1,33 @@
+// src/dao/ContactosDAO.java
+package dao;
+import db.Conexion;
+import java.sql.*;
+import java.util.*;
+
+public class ContactosDAO {
+    public List<Object[]> listarTodos() throws SQLException {
+        String sql = "SELECT id_contacto, id_cliente, tipo, valor FROM contactos ORDER BY id_contacto";
+        try (Connection c = Conexion.get();
+             PreparedStatement ps = c.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            List<Object[]> out = new ArrayList<>();
+            while (rs.next()) {
+                out.add(new Object[]{
+                    rs.getInt(1), rs.getInt(2),
+                    rs.getString(3), rs.getString(4)
+                });
+            }
+            return out;
+        }
+    }
+    public int borrar(int idContacto) throws SQLException {
+        try (Connection c = Conexion.get();
+             PreparedStatement ps = c.prepareStatement("DELETE FROM contactos WHERE id_contacto=?")) {
+            ps.setInt(1, idContacto);
+            return ps.executeUpdate();
+        }
+    }
+    // Stubs:
+    public void insertar(int idCliente, String tipo, String valor) throws SQLException { /* TODO */ }
+    public int modificar(int idContacto, int idCliente, String tipo, String valor) throws SQLException { return 0; }
+}
