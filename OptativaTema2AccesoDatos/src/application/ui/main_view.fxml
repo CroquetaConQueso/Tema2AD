@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="application.ui.MainController">
+
+    <top>
+        <MenuBar>
+            <menus>
+                <Menu text="Archivo">
+                    <items>
+                        <MenuItem text="Salir" onAction="#onSalir"/>
+                    </items>
+                </Menu>
+                <Menu text="Editar"/>
+                <Menu text="Ayuda">
+                    <items>
+                        <MenuItem text="Acerca de…" onAction="#onAcercaDe"/>
+                    </items>
+                </Menu>
+            </menus>
+        </MenuBar>
+    </top>
+
+    <center>
+        <TabPane fx:id="tabs">
+            <!-- ===================== CLIENTES ===================== -->
+            <Tab text="Clientes" closable="false">
+                <content>
+                    <GridPane hgap="8" vgap="8">
+                        <padding><Insets topRightBottomLeft="10"/></padding>
+                        <columnConstraints>
+                            <ColumnConstraints hgrow="ALWAYS"/>
+                        </columnConstraints>
+
+                        <!-- Fila 0 -->
+                        <HBox spacing="8" GridPane.rowIndex="0">
+                            <children>
+                                <Label text="Buscar por:"/>
+                                <ChoiceBox fx:id="chTipoCliente"/>
+                                <TextField fx:id="txtBuscarCliente" promptText="Texto a buscar…" HBox.hgrow="ALWAYS"/>
+                                <Button text="Buscar" onAction="#onBuscarCliente"/>
+                                <Button text="Listar" onAction="#onListarCliente"/>
+                            </children>
+                        </HBox>
+
+                        <!-- Fila 1: Búsqueda avanzada -->
+                        <TitledPane text="Búsqueda avanzada" expanded="false" GridPane.rowIndex="1">
+                            <content>
+                                <HBox spacing="8">
+                                    <padding><Insets topRightBottomLeft="8"/></padding>
+                                    <children>
+                                        <TextField fx:id="fClNombre"  promptText="Nombre contiene…"/>
+                                        <TextField fx:id="fClTelefono" promptText="Teléfono contiene…"/>
+                                        <TextField fx:id="fClEmail"   promptText="Email contiene…"/>
+                                        <Button text="Buscar (avanzado)" onAction="#onBuscarClientesAvanzado"/>
+                                    </children>
+                                </HBox>
+                            </content>
+                        </TitledPane>
+
+                        <!-- Fila 2: tabla -->
+                        <TableView fx:id="tblClientes" GridPane.rowIndex="2" prefHeight="320">
+                            <columns>
+                                <TableColumn fx:id="colClId"    text="ID"     prefWidth="80"/>
+                                <TableColumn fx:id="colClNom"   text="Nombre" prefWidth="220"/>
+                                <TableColumn fx:id="colClTel"   text="Teléfono" prefWidth="140"/>
+                                <TableColumn fx:id="colClEmail" text="Email"  prefWidth="260"/>
+                            </columns>
+                            <contextMenu>
+                                <ContextMenu>
+                                    <items>
+                                        <MenuItem text="Consultar selección…" onAction="#onConsultarClientes"/>
+                                        <MenuItem text="Modificar selección…" onAction="#onModificarClienteMulti"/>
+                                        <MenuItem text="Borrar selección"     onAction="#onBorrarCliente"/>
+                                    </items>
+                                </ContextMenu>
+                            </contextMenu>
+                        </TableView>
+
+                        <!-- Fila 3: form + acciones -->
+                        <VBox spacing="8" GridPane.rowIndex="3">
+                            <children>
+                                <HBox spacing="8">
+                                    <children>
+                                        <TextField fx:id="txtClId"      promptText="ID cliente" prefWidth="120"/>
+                                        <TextField fx:id="txtClNombre"  promptText="Nombre"     HBox.hgrow="ALWAYS"/>
+                                        <TextField fx:id="txtClTelefono" promptText="Teléfono"  prefWidth="160"/>
+                                        <TextField fx:id="txtClEmail"   promptText="Email"      prefWidth="240"/>
+                                    </children>
+                                </HBox>
+                                <HBox spacing="8">
+                                    <children>
+                                        <Button text="Insertar" onAction="#onInsertarCliente"/>
+                                        <Button text="Modificar" onAction="#onModificarCliente"/>
+                                        <Button text="Modificar (multi)" onAction="#onModificarClienteMulti"/>
+                                        <Button text="Consultar" onAction="#onConsultarClientes"/>
+                                        <Button text="Borrar" onAction="#onBorrarCliente"/>
+                                        <Region HBox.hgrow="ALWAYS"/>
+                                        <Button text="Exportar (bin)" onAction="#onExportBin"/>
+                                        <Button text="Exportar (CSV)" onAction="#onExportCsv"/>
+                                    </children>
+                                </HBox>
+                            </children>
+                        </VBox>
+                    </GridPane>
+                </content>
+            </Tab>
+
+            <!-- ===================== VEHÍCULOS ===================== -->
+            <Tab text="Vehículos" closable="false">
+                <content>
+                    <GridPane hgap="8" vgap="8">
+                        <padding><Insets topRightBottomLeft="10"/></padding>
+                        <columnConstraints>
+                            <ColumnConstraints hgrow="ALWAYS"/>
+                        </columnConstraints>
+
+                        <!-- Fila 0 -->
+                        <HBox spacing="8" GridPane.rowIndex="0">
+                            <children>
+                                <Label text="Buscar por:"/>
+                                <ChoiceBox fx:id="chTipoVeh"/>
+                                <TextField fx:id="txtBuscarVeh" promptText="Texto a buscar…" HBox.hgrow="ALWAYS"/>
+                                <Button text="Buscar" onAction="#onBuscarVehiculo"/>
+                                <Button text="Listar" onAction="#onListarVehiculo"/>
+                            </children>
+                        </HBox>
+
+                        <!-- Fila 1: Búsqueda avanzada -->
+                        <TitledPane text="Búsqueda avanzada" expanded="false" GridPane.rowIndex="1">
+                            <content>
+                                <HBox spacing="8">
+                                    <padding><Insets topRightBottomLeft="8"/></padding>
+                                    <children>
+                                        <TextField fx:id="fVMatricula" promptText="Matrícula contiene…"/>
+                                        <TextField fx:id="fVMarca"     promptText="Marca contiene…"/>
+                                        <TextField fx:id="fVModelo"    promptText="Modelo contiene…"/>
+                                        <ComboBox fx:id="fVCliente"    promptText="Id – Cliente" prefWidth="220"/>
+                                        <Button text="Buscar (avanzado)" onAction="#onBuscarVehiculosAvanzado"/>
+                                    </children>
+                                </HBox>
+                            </content>
+                        </TitledPane>
+
+                        <!-- Fila 2: tabla -->
+                        <TableView fx:id="tblVehiculos" GridPane.rowIndex="2" prefHeight="320">
+                            <columns>
+                                <TableColumn fx:id="colVId"    text="ID"       prefWidth="80"/>
+                                <TableColumn fx:id="colVMat"   text="Matrícula" prefWidth="140"/>
+                                <TableColumn fx:id="colVMarca" text="Marca"     prefWidth="160"/>
+                                <TableColumn fx:id="colVModelo" text="Modelo"   prefWidth="160"/>
+                                <TableColumn fx:id="colVClId"  text="IdCliente" prefWidth="100"/>
+                            </columns>
+                            <contextMenu>
+                                <ContextMenu>
+                                    <items>
+                                        <MenuItem text="Consultar selección…" onAction="#onConsultarVehiculos"/>
+                                        <MenuItem text="Modificar selección…" onAction="#onModificarVehiculoMulti"/>
+                                        <MenuItem text="Borrar selección"     onAction="#onBorrarVehiculo"/>
+                                    </items>
+                                </ContextMenu>
+                            </contextMenu>
+                        </TableView>
+
+                        <!-- Fila 3: form + acciones -->
+                        <VBox spacing="8" GridPane.rowIndex="3">
+                            <children>
+                                <HBox spacing="8">
+                                    <children>
+                                        <TextField fx:id="txtVId"         promptText="ID vehículo" prefWidth="120"/>
+                                        <TextField fx:id="txtVMatricula"  promptText="Matrícula"   prefWidth="160"/>
+                                        <TextField fx:id="txtVMarca"      promptText="Marca"       prefWidth="160"/>
+                                        <TextField fx:id="txtVModelo"     promptText="Modelo"      prefWidth="160"/>
+                                        <ComboBox  fx:id="cmbVCliente"    promptText="Id – Cliente" prefWidth="240"/>
+                                    </children>
+                                </HBox>
+                                <HBox spacing="8">
+                                    <children>
+                                        <Button text="Insertar" onAction="#onInsertarVehiculo"/>
+                                        <Button text="Modificar" onAction="#onModificarVehiculo"/>
+                                        <Button text="Modificar (multi)" onAction="#onModificarVehiculoMulti"/>
+                                        <Button text="Consultar" onAction="#onConsultarVehiculos"/>
+                                        <Button text="Borrar" onAction="#onBorrarVehiculo"/>
+                                        <Region HBox.hgrow="ALWAYS"/>
+                                        <Button text="Exportar (bin)" onAction="#onExportBin"/>
+                                        <Button text="Exportar (CSV)" onAction="#onExportCsv"/>
+                                    </children>
+                                </HBox>
+                            </children>
+                        </VBox>
+                    </GridPane>
+                </content>
+            </Tab>
+
+            <!-- ===================== ÓRDENES ===================== -->
+            <Tab text="Órdenes" closable="false">
+                <content>
+                    <GridPane hgap="8" vgap="8">
+                        <padding><Insets topRightBottomLeft="10"/></padding>
+                        <columnConstraints>
+                            <ColumnConstraints hgrow="ALWAYS"/>
+                        </columnConstraints>
+
+                        <!-- Fila 0 -->
+                        <HBox spacing="8" GridPane.rowIndex="0">
+                            <children>
+                                <Label text="Estado:"/>
+                                <ChoiceBox fx:id="chFiltroEstado" onAction="#onFiltrarOrdenPorEstado"/>
+                                <Region HBox.hgrow="ALWAYS"/>
+                                <Button text="Listar" onAction="#onListarOrden"/>
+                            </children>
+                        </HBox>
+
+                        <!-- Fila 1: Búsqueda avanzada -->
+                        <TitledPane text="Búsqueda avanzada" expanded="false" GridPane.rowIndex="1">
+                            <content>
+                                <HBox spacing="8">
+                                    <padding><Insets topRightBottomLeft="8"/></padding>
+                                    <children>
+                                        <Label text="Desde:"/>
+                                        <DatePicker fx:id="fODesde"/>
+                                        <Label text="Hasta:"/>
+                                        <DatePicker fx:id="fOHasta"/>
+                                        <TextField fx:id="fOMatricula"     promptText="Matrícula contiene…"/>
+                                        <TextField fx:id="fONombreCliente" promptText="Nombre cliente contiene…"/>
+                                        <Button text="Buscar (avanzado)" onAction="#onBuscarOrdenesAvanzado"/>
+                                    </children>
+                                </HBox>
+                            </content>
+                        </TitledPane>
+
+                        <!-- Fila 2: tabla -->
+                        <TableView fx:id="tblOrdenes" GridPane.rowIndex="2" prefHeight="320">
+                            <columns>
+                                <TableColumn fx:id="colOId"      text="ID"        prefWidth="80"/>
+                                <TableColumn fx:id="colOFecha"   text="Fecha"     prefWidth="120"/>
+                                <TableColumn fx:id="colODesc"    text="Descripción" prefWidth="260"/>
+                                <TableColumn fx:id="colOEstado"  text="Estado"    prefWidth="120"/>
+                                <TableColumn fx:id="colOVeh"     text="IdVeh"     prefWidth="80"/>
+                                <TableColumn fx:id="colONomCli"  text="Cliente"   prefWidth="180"/>
+                                <TableColumn fx:id="colOTotal"   text="Total (€)" prefWidth="100"/>
+                            </columns>
+                            <contextMenu>
+                                <ContextMenu>
+                                    <items>
+                                        <MenuItem text="Consultar selección…" onAction="#onConsultarOrdenes"/>
+                                        <MenuItem text="Modificar selección…" onAction="#onModificarOrdenMulti"/>
+                                        <MenuItem text="Borrar selección"     onAction="#onBorrarOrden"/>
+                                    </items>
+                                </ContextMenu>
+                            </contextMenu>
+                        </TableView>
+
+                        <!-- Fila 3: form + acciones -->
+                        <VBox spacing="8" GridPane.rowIndex="3">
+                            <children>
+                                <HBox spacing="8">
+                                    <children>
+                                        <TextField  fx:id="txtOId"   promptText="ID orden" prefWidth="120"/>
+                                        <DatePicker fx:id="dpOFecha"/>
+                                        <TextField  fx:id="txtODesc" promptText="Descripción" HBox.hgrow="ALWAYS"/>
+                                        <ChoiceBox fx:id="chOEstado" prefWidth="160"/>
+                                        <ComboBox  fx:id="cmbOVehiculo" promptText="Id – Matrícula" prefWidth="220"/>
+                                    </children>
+                                </HBox>
+                                <HBox spacing="8">
+                                    <children>
+                                        <Button text="Insertar" onAction="#onInsertarOrden"/>
+                                        <Button text="Modificar" onAction="#onModificarOrden"/>
+                                        <Button text="Modificar (multi)" onAction="#onModificarOrdenMulti"/>
+                                        <Button text="Consultar" onAction="#onConsultarOrdenes"/>
+                                        <Button text="Borrar" onAction="#onBorrarOrden"/>
+                                        <Region HBox.hgrow="ALWAYS"/>
+                                        <Button text="Exportar (bin)" onAction="#onExportBin"/>
+                                        <Button text="Exportar (CSV)" onAction="#onExportCsv"/>
+                                    </children>
+                                </HBox>
+                            </children>
+                        </VBox>
+                    </GridPane>
+                </content>
+            </Tab>
+        </TabPane>
+    </center>
+</BorderPane>
