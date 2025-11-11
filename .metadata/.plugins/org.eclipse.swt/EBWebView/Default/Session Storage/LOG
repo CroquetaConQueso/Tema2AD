@@ -1,3 +1,4 @@
-2025/11/11-09:44:52.645 5d04 Reusing MANIFEST D:\Tema2AccesoDatos\.metadata\.plugins\org.eclipse.swt\EBWebView\Default\Session Storage/MANIFEST-000001
-2025/11/11-09:44:52.646 5d04 Recovering log #3
-2025/11/11-09:44:52.647 5d04 Reusing old log D:\Tema2AccesoDatos\.metadata\.plugins\org.eclipse.swt\EBWebView\Default\Session Storage/000003.log 
+2025/11/11-18:29:19.624 3990 Creating DB C:\Users\ctorleo571\Desktop\Proyectos\Tema2AD\Tema2AD\.metadata\.plugins\org.eclipse.swt\EBWebView\Default\Session Storage since it was missing.
+2025/11/11-18:29:19.634 3990 Reusing MANIFEST C:\Users\ctorleo571\Desktop\Proyectos\Tema2AD\Tema2AD\.metadata\.plugins\org.eclipse.swt\EBWebView\Default\Session Storage/MANIFEST-000001
+2025/11/11-18:29:19.635 3990 Recovering log #3
+2025/11/11-18:29:19.637 3990 Reusing old log C:\Users\ctorleo571\Desktop\Proyectos\Tema2AD\Tema2AD\.metadata\.plugins\org.eclipse.swt\EBWebView\Default\Session Storage/000003.log 

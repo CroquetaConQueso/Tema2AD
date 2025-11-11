@@ -2,24 +2,21 @@ package vista.direcciones;
 
 import dao.DireccionesDAO;
 import vista.base.CrudTab;
-import vista.validacion.UiFeedback;
-import vista.validacion.Validator;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumnModel;
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.List;
 
 public class TabDirecciones extends CrudTab {
 
-    private JSpinner    eIdCliente;
-    private JTextField  eVia;
-    private JTextField  eCiudad;
-    private JTextField  eCP;
+    private JSpinner eIdCliente;
+    private JTextField eVia;
+    private JTextField eCiudad;
+    private JTextField eCP;
 
-    public TabDirecciones(){ super(); }
+    public TabDirecciones() { super(); }
 
     @Override
     protected void construirModelo() {
@@ -35,7 +32,6 @@ public class TabDirecciones extends CrudTab {
                 };
             }
         };
-
         cbCampo.removeAllItems();
         cbCampo.addItem("Todos");
         cbCampo.addItem("ID");
@@ -43,32 +39,28 @@ public class TabDirecciones extends CrudTab {
         cbCampo.addItem("Vía");
         cbCampo.addItem("Ciudad");
         cbCampo.addItem("CP");
-
         configurarEditor();
     }
 
     @Override
     protected void alInstalarModelo() {
-        tabla.setModel(modelo);
-        setColumnWidths(50, 70, 90, 360, 220, 90, 90, 90, 90);
-
+        setColumnWidths(50, 70, 90, 300, 220, 100, 100, 100, 100);
         TableColumnModel cols = tabla.getColumnModel();
         cols.getColumn(6).setCellRenderer(new BtnRenderer("Detalles"));
-        cols.getColumn(6).setCellEditor  (new BtnEditor  ("Detalles", row -> { Integer id=idFromViewRow(row); if (id!=null) verDetalles(id); }));
+        cols.getColumn(6).setCellEditor  (new BtnEditor  ("Detalles", row -> { Integer id = idFromViewRow(row); if (id != null) verDetalles(id); }));
         cols.getColumn(7).setCellRenderer(new BtnRenderer("Editar"));
-        cols.getColumn(7).setCellEditor  (new BtnEditor  ("Editar",   row -> { Integer id=idFromViewRow(row); if (id!=null) editar(id);   }));
+        cols.getColumn(7).setCellEditor  (new BtnEditor  ("Editar",   row -> { Integer id = idFromViewRow(row); if (id != null) editar(id); }));
         cols.getColumn(8).setCellRenderer(new BtnRenderer("Borrar"));
-        cols.getColumn(8).setCellEditor  (new BtnEditor  ("Borrar",   row -> { Integer id=idFromViewRow(row); if (id!=null) borrar(id);   }));
+        cols.getColumn(8).setCellEditor  (new BtnEditor  ("Borrar",   row -> { Integer id = idFromViewRow(row); if (id != null) borrar(id); }));
     }
 
     @Override
     protected void configurarEditor() {
         editorPanel.removeAll();
-
         if (eIdCliente == null) eIdCliente = new JSpinner(new SpinnerNumberModel(1,1,1_000_000,1));
-        if (eVia       == null) eVia       = new JTextField(28);
-        if (eCiudad    == null) eCiudad    = new JTextField(18);
-        if (eCP        == null) eCP        = new JTextField(10);
+        if (eVia == null) eVia = new JTextField(28);
+        if (eCiudad == null) eCiudad = new JTextField(18);
+        if (eCP == null) eCP = new JTextField(10);
 
         JButton btnGuardar  = new JButton("Guardar");
         JButton btnCancelar = new JButton("Cancelar");
@@ -81,17 +73,20 @@ public class TabDirecciones extends CrudTab {
 
         gbc.gridx=0; gbc.gridy=y; editorPanel.add(new JLabel("ClienteID:"), gbc);
         gbc.gridx=1;             editorPanel.add(eIdCliente, gbc); y++;
+
         gbc.gridx=0; gbc.gridy=y; editorPanel.add(new JLabel("Vía:"), gbc);
         gbc.gridx=1;             editorPanel.add(eVia, gbc); y++;
+
         gbc.gridx=0; gbc.gridy=y; editorPanel.add(new JLabel("Ciudad:"), gbc);
         gbc.gridx=1;             editorPanel.add(eCiudad, gbc); y++;
+
         gbc.gridx=0; gbc.gridy=y; editorPanel.add(new JLabel("CP:"), gbc);
         gbc.gridx=1;             editorPanel.add(eCP, gbc); y++;
 
-        JPanel pnlBtns = new JPanel(new FlowLayout(FlowLayout.RIGHT,8,0));
-        pnlBtns.add(btnCancelar); pnlBtns.add(btnGuardar);
+        JPanel pnl = new JPanel(new FlowLayout(FlowLayout.RIGHT,8,0));
+        pnl.add(btnCancelar); pnl.add(btnGuardar);
         gbc.gridx=0; gbc.gridy=++y; gbc.gridwidth=2; gbc.fill=GridBagConstraints.HORIZONTAL;
-        editorPanel.add(pnlBtns, gbc);
+        editorPanel.add(pnl, gbc);
 
         editorPanel.setVisible(false);
     }
@@ -111,7 +106,6 @@ public class TabDirecciones extends CrudTab {
     protected void nuevo() {
         editId = null;
         eIdCliente.setValue(1); eVia.setText(""); eCiudad.setText(""); eCP.setText("");
-        UiFeedback.clearAll(eVia, eCiudad, eCP);
         editorPanel.setVisible(true); eVia.requestFocus(); revalidate();
     }
 
@@ -120,12 +114,11 @@ public class TabDirecciones extends CrudTab {
         try {
             Object[] d = new DireccionesDAO().getById(id);
             if (d == null) return;
-            editId = (Integer)d[0];
-            eIdCliente.setValue((Integer)d[1]);
+            editId = (Integer) d[0];
+            eIdCliente.setValue((Integer) d[1]);
             eVia.setText(String.valueOf(d[2]));
             eCiudad.setText(String.valueOf(d[3]));
             eCP.setText(String.valueOf(d[4]));
-            UiFeedback.clearAll(eVia, eCiudad, eCP);
             editorPanel.setVisible(true); eVia.requestFocus(); revalidate();
         } catch (Exception ex) { showError("cargar dirección (editar)", ex); }
     }
@@ -143,40 +136,17 @@ public class TabDirecciones extends CrudTab {
                     Vía:       %s
                     Ciudad:    %s
                     CP:        %s
-                    """.formatted(d[0],d[1],d[2],d[3],d[4]);
+                    """.formatted(d[0], d[1], d[2], d[3], d[4]);
             JOptionPane.showMessageDialog(this, msg, "Detalles", JOptionPane.INFORMATION_MESSAGE);
         } catch (Exception ex) { showError("detalles dirección", ex); }
     }
 
     private void guardar() {
-        int idCliente = (Integer) eIdCliente.getValue();
-        String via    = eVia.getText().trim();
+        int idCliente = (Integer)eIdCliente.getValue();
+        String via = eVia.getText().trim();
         String ciudad = eCiudad.getText().trim();
-        String cp     = eCP.getText().trim();
-
-        UiFeedback.clearAll(eVia, eCiudad, eCP);
-        List<String> errores = new ArrayList<>();
-
-        if (!Validator.lengthBetween(via, 3, 120)) {
-            errores.add("Vía: entre 3 y 120 caracteres");
-            UiFeedback.markError(eVia, "Longitud 3–120");
-        }
-        if (!Validator.lengthBetween(ciudad, 2, 80)) {
-            errores.add("Ciudad: entre 2 y 80 caracteres");
-            UiFeedback.markError(eCiudad, "Longitud 2–80");
-        }
-        if (!Validator.cpES(cp)) {
-            errores.add("CP: debe ser un código postal español de 5 dígitos");
-            UiFeedback.markError(eCP, "Formato: 5 dígitos");
-        }
-        if (idCliente <= 0) {
-            errores.add("ClienteID: debe ser mayor que 0");
-        }
-
-        if (!errores.isEmpty()) {
-            UiFeedback.showErrors(this, errores);
-            return;
-        }
+        String cp = eCP.getText().trim();
+        if (via.isBlank() || ciudad.isBlank() || cp.isBlank()) { JOptionPane.showMessageDialog(this,"Todos los campos son obligatorios"); return; }
 
         try {
             DireccionesDAO dao = new DireccionesDAO();
@@ -186,7 +156,7 @@ public class TabDirecciones extends CrudTab {
         } catch (Exception ex) { showError("guardar dirección", ex); }
     }
 
-    private void cancelar(){ editorPanel.setVisible(false); editId = null; }
+    private void cancelar() { editorPanel.setVisible(false); editId = null; }
 
     @Override
     protected void borrar(int id) {
@@ -195,3 +165,4 @@ public class TabDirecciones extends CrudTab {
         catch (Exception ex){ showError("borrar dirección", ex); }
     }
 }
+

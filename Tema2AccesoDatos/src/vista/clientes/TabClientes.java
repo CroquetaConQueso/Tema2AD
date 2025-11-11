@@ -2,14 +2,11 @@ package vista.clientes;
 
 import dao.ClientesDAO;
 import vista.base.CrudTab;
-import vista.validacion.UiFeedback;
-import vista.validacion.Validator;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumnModel;
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.List;
 
 public class TabClientes extends CrudTab {
@@ -34,35 +31,30 @@ public class TabClientes extends CrudTab {
                 };
             }
         };
-
         cbCampo.removeAllItems();
         cbCampo.addItem("Todos");
         cbCampo.addItem("ID");
         cbCampo.addItem("Nombre");
         cbCampo.addItem("Email");
         cbCampo.addItem("Edad");
-
         configurarEditor();
     }
 
     @Override
     protected void alInstalarModelo() {
-        tabla.setModel(modelo);
-        setColumnWidths(50, 70, 300, 380, 70, 90, 90, 90);
-
+        setColumnWidths(50, 70, 260, 360, 80, 100, 100, 100);
         TableColumnModel cols = tabla.getColumnModel();
         cols.getColumn(5).setCellRenderer(new BtnRenderer("Detalles"));
-        cols.getColumn(5).setCellEditor  (new BtnEditor  ("Detalles", row -> { Integer id=idFromViewRow(row); if (id!=null) verDetalles(id); }));
+        cols.getColumn(5).setCellEditor  (new BtnEditor  ("Detalles", row -> { Integer id = idFromViewRow(row); if (id != null) verDetalles(id); }));
         cols.getColumn(6).setCellRenderer(new BtnRenderer("Editar"));
-        cols.getColumn(6).setCellEditor  (new BtnEditor  ("Editar",   row -> { Integer id=idFromViewRow(row); if (id!=null) editar(id);   }));
+        cols.getColumn(6).setCellEditor  (new BtnEditor  ("Editar",   row -> { Integer id = idFromViewRow(row); if (id != null) editar(id); }));
         cols.getColumn(7).setCellRenderer(new BtnRenderer("Borrar"));
-        cols.getColumn(7).setCellEditor  (new BtnEditor  ("Borrar",   row -> { Integer id=idFromViewRow(row); if (id!=null) borrar(id);   }));
+        cols.getColumn(7).setCellEditor  (new BtnEditor  ("Borrar",   row -> { Integer id = idFromViewRow(row); if (id != null) borrar(id); }));
     }
 
     @Override
     protected void configurarEditor() {
         editorPanel.removeAll();
-
         if (eNombre == null) eNombre = new JTextField(24);
         if (eEmail  == null) eEmail  = new JTextField(24);
         if (eEdad   == null) eEdad   = new JSpinner(new SpinnerNumberModel(18, 0, 120, 1));
@@ -73,23 +65,22 @@ public class TabClientes extends CrudTab {
         btnCancelar.addActionListener(e -> cancelar());
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(4,4,4,4);
-        gbc.anchor = GridBagConstraints.WEST;
+        gbc.insets = new Insets(4,4,4,4); gbc.anchor = GridBagConstraints.WEST;
         int y=0;
 
         gbc.gridx=0; gbc.gridy=y; editorPanel.add(new JLabel("Nombre:"), gbc);
         gbc.gridx=1;             editorPanel.add(eNombre, gbc); y++;
 
         gbc.gridx=0; gbc.gridy=y; editorPanel.add(new JLabel("Email:"), gbc);
-        gbc.gridx=1;             editorPanel.add(eEmail,  gbc); y++;
+        gbc.gridx=1;             editorPanel.add(eEmail, gbc); y++;
 
         gbc.gridx=0; gbc.gridy=y; editorPanel.add(new JLabel("Edad:"), gbc);
-        gbc.gridx=1;             editorPanel.add(eEdad,   gbc); y++;
+        gbc.gridx=1;             editorPanel.add(eEdad, gbc); y++;
 
-        JPanel pnlBtns = new JPanel(new FlowLayout(FlowLayout.RIGHT,8,0));
-        pnlBtns.add(btnCancelar); pnlBtns.add(btnGuardar);
+        JPanel pnl = new JPanel(new FlowLayout(FlowLayout.RIGHT,8,0));
+        pnl.add(btnCancelar); pnl.add(btnGuardar);
         gbc.gridx=0; gbc.gridy=++y; gbc.gridwidth=2; gbc.fill=GridBagConstraints.HORIZONTAL;
-        editorPanel.add(pnlBtns, gbc);
+        editorPanel.add(pnl, gbc);
 
         editorPanel.setVisible(false);
     }
@@ -109,7 +100,6 @@ public class TabClientes extends CrudTab {
     protected void nuevo() {
         editId = null;
         eNombre.setText(""); eEmail.setText(""); eEdad.setValue(18);
-        UiFeedback.clearAll(eNombre, eEmail);
         editorPanel.setVisible(true); eNombre.requestFocus(); revalidate();
     }
 
@@ -118,11 +108,10 @@ public class TabClientes extends CrudTab {
         try {
             Object[] c = new ClientesDAO().getById(id);
             if (c == null) return;
-            editId = (Integer)c[0];
+            editId = (Integer) c[0];
             eNombre.setText(String.valueOf(c[1]));
             eEmail.setText(String.valueOf(c[2]));
-            eEdad.setValue((Integer)c[3]);
-            UiFeedback.clearAll(eNombre, eEmail);
+            eEdad.setValue((Integer) c[3]);
             editorPanel.setVisible(true); eNombre.requestFocus(); revalidate();
         } catch (Exception ex) { showError("cargar cliente (editar)", ex); }
     }
@@ -139,7 +128,7 @@ public class TabClientes extends CrudTab {
                     Nombre: %s
                     Email:  %s
                     Edad:   %s
-                    """.formatted(c[0],c[1],c[2],c[3]);
+                    """.formatted(c[0], c[1], c[2], c[3]);
             JOptionPane.showMessageDialog(this, msg, "Detalles", JOptionPane.INFORMATION_MESSAGE);
         } catch (Exception ex) { showError("detalles cliente", ex); }
     }
@@ -148,37 +137,20 @@ public class TabClientes extends CrudTab {
         String nombre = eNombre.getText().trim();
         String email  = eEmail.getText().trim();
         int    edad   = (Integer) eEdad.getValue();
-
-        UiFeedback.clearAll(eNombre, eEmail);
-        List<String> errores = new ArrayList<>();
-
-        if (!Validator.lengthBetween(nombre, 2, 100)) {
-            errores.add("Nombre: entre 2 y 100 caracteres");
-            UiFeedback.markError(eNombre, "Introduce entre 2 y 100 caracteres");
-        }
-        if (!Validator.email(email)) {
-            errores.add("Email: formato inválido (usuario@dominio.tld)");
-            UiFeedback.markError(eEmail, "Formato de email inválido");
-        }
-        if (!Validator.edad(edad)) {
-            errores.add("Edad: debe estar entre 0 y 120");
-        }
-
-        if (!errores.isEmpty()) {
-            UiFeedback.showErrors(this, errores);
-            return;
-        }
+        if (nombre.isBlank()) { JOptionPane.showMessageDialog(this,"Nombre requerido"); return; }
+        if (!emailValido(email)) { JOptionPane.showMessageDialog(this,"Email inválido"); return; }
+        if (edad<0 || edad>120) { JOptionPane.showMessageDialog(this,"Edad fuera de rango"); return; }
 
         try {
             ClientesDAO dao = new ClientesDAO();
-            if (editId == null) dao.insertar(nombre,email,edad);
-            else dao.modificar(editId,nombre,email,edad);
+            if (editId == null) dao.insertar(nombre, email, edad);
+            else dao.modificar(editId, nombre, email, edad);
             cancelar(); cargar();
         } catch (Exception ex) { showError("guardar cliente", ex); }
     }
 
     private void cancelar() { editorPanel.setVisible(false); editId = null; }
-    
+
     @Override
     protected void borrar(int id) {
         if (!confirm("¿Borrar cliente ID "+id+"?")) return;
@@ -186,3 +158,4 @@ public class TabClientes extends CrudTab {
         catch (Exception ex){ showError("borrar cliente", ex); }
     }
 }
+

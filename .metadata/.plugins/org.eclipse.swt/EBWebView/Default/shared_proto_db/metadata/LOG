@@ -1,3 +1,4 @@
-2025/11/11-09:44:51.881 4d7c Reusing MANIFEST D:\Tema2AccesoDatos\.metadata\.plugins\org.eclipse.swt\EBWebView\Default\shared_proto_db\metadata/MANIFEST-000001
-2025/11/11-09:44:51.882 4d7c Recovering log #3
-2025/11/11-09:44:51.882 4d7c Reusing old log D:\Tema2AccesoDatos\.metadata\.plugins\org.eclipse.swt\EBWebView\Default\shared_proto_db\metadata/000003.log 
+2025/11/11-18:29:19.089 ffc Creating DB C:\Users\ctorleo571\Desktop\Proyectos\Tema2AD\Tema2AD\.metadata\.plugins\org.eclipse.swt\EBWebView\Default\shared_proto_db\metadata since it was missing.
+2025/11/11-18:29:19.096 ffc Reusing MANIFEST C:\Users\ctorleo571\Desktop\Proyectos\Tema2AD\Tema2AD\.metadata\.plugins\org.eclipse.swt\EBWebView\Default\shared_proto_db\metadata/MANIFEST-000001
+2025/11/11-18:29:19.097 ffc Recovering log #3
+2025/11/11-18:29:19.098 ffc Reusing old log C:\Users\ctorleo571\Desktop\Proyectos\Tema2AD\Tema2AD\.metadata\.plugins\org.eclipse.swt\EBWebView\Default\shared_proto_db\metadata/000003.log 
