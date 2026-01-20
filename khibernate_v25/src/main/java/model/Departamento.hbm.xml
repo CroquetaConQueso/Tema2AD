@@ -1,0 +1,12 @@
+<hibernate-mapping package="model">
+    <class name="Departamento" table="departamentos">
+
+        <id name="deptoNo" column="depto_no" type="int">
+            <generator class="assigned"/>
+        </id>
+
+        <property name="dnombre" column="dnombre" type="string" length="15"/>
+        <property name="loc" column="loc" type="string" length="15"/>
+
+    </class>
+</hibernate-mapping>
